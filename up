@@ -1,0 +1,84 @@
+#include <iostream>
+#include <cstddef>
+
+using namespace std;
+
+template<class T>  //  на семинаре
+class UniquePtr {
+public:
+    //В вашем классе должны быть запрещены конструктор копирования и обычный оператор присваивания.
+    UniquePtr(const UniquePtr& other) = delete;
+    UniquePtr& operator=(const UniquePtr& other) = delete;
+// Конструктор по умолчанию, создающий пустой умный указатель.
+    UniquePtr() noexcept : data(nullptr)  {}
+
+// Конструктор, принимающий T * и захватывающий владение этой динамической памятью.
+
+    UniquePtr(T* ptr) noexcept : data(ptr) {}
+
+    UniquePtr(UniquePtr&& ptr) noexcept : data(nullptr) {
+        (*this).swap(ptr);
+    }
+
+    UniquePtr& operator=(std::nullptr_t) noexcept {
+        delete data;
+        data = nullptr;
+        return *this;
+    }
+// Move-оператор присваивания, получающий на вход rvalue-ссылку на другой UniquePtr.
+    UniquePtr& operator=(UniquePtr&& now) noexcept {
+        (*this).swap(now);
+        return *this;
+    }
+
+// Константный оператор *.
+    const T& operator*() const {
+        return *data;
+    }
+
+// Деструктор.
+    ~UniquePtr() {
+        delete data;
+    }
+
+// Константный оператор -> (он должен вернуть просто сам указатель).
+    T* operator->() noexcept {
+        return data;
+    }
+
+    const T* operator -> () const noexcept {
+        return data;
+    }
+
+// Функцию T * release(), отменяющую владение объектом и возвращающую хранящийся внутри указатель.
+    T* release() noexcept {
+        delete data;
+        data = nullptr;
+        return data;
+    }
+
+//Функцию void reset(T * ptr), после выполнения которой умный указатель должен захватить ptr.
+    void reset(T* ptr) noexcept {
+        delete data;
+        data = ptr;
+    }
+
+//Функцию void swap(UniquePtr& other), обменивающуюся содержимым с другим умным указателем.
+    void swap(UniquePtr& other) noexcept {
+        std::swap(data, other.data);
+    }
+//Функцию T * get() const, возвращающую указатель.
+
+    T* get() const noexcept {
+        return data;
+    }
+
+
+// explicit operator bool() const, позволяющий определить, не пуст ли умный указатель.
+    explicit operator bool() const noexcept {
+        return data;
+    }
+
+private:
+    T* data;
+};
